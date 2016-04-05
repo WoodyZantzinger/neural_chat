@@ -15,10 +15,8 @@ def hello():
 
 @app.route('/message/', methods=['POST'])
 def message():
-    new_message = request.get_json(force=True)
-    print("received message: ")
-    print(new_message["text"])
-    return 'OK'
+    print "POST happened"
+    return request.form['text']
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
