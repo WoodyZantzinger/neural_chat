@@ -4,6 +4,7 @@ import os
 import time
 import sys
 from flask import Flask, request
+import json
 
 DEBUG = False
 
@@ -16,7 +17,8 @@ def hello():
 @app.route('/message/', methods=['POST'])
 def message():
     print "POST happened"
-    return request.form['text']
+    resp = {"text": request.form['text']}
+    return json.dumps(resp)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
