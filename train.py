@@ -13,8 +13,9 @@ from utils import *
 from timeit import default_timer as timer
 import datetime
 import operator
+import heapq
 
-vocabulary_size = 3000
+vocabulary_size = 4000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
@@ -55,7 +56,8 @@ def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, eva
 channels = ["pm",
             "cville",
             "hbon",
-            "hboespana"]
+            "cbc",
+            "teachstone"]
 
 print "Reading Slack history"
 slack_data = slack_load.slack_load(channels)
@@ -76,13 +78,13 @@ print "Found %d unique words tokens in prompts." % len(word_freq_prompts.items()
 print "Found %d unique words tokens in responses." % len(word_freq_responses.items())
 
 # Get the most common words and build index_to_word and word_to_index vectors
-vocab_prompts = word_freq_prompts.most_common(vocabulary_size-1)
+vocab_prompts = word_freq_prompts.most_common(vocabulary_size-2)
 index_to_word_prompts = [x[0] for x in vocab_prompts]
 index_to_word_prompts.append(unknown_token)
 index_to_word_prompts.append(sentence_blank_token)
 word_to_index_prompts = dict([(w,i) for i,w in enumerate(index_to_word_prompts)])
 
-vocab_responses = word_freq_responses.most_common(vocabulary_size-1)
+vocab_responses = word_freq_responses.most_common(vocabulary_size-2)
 index_to_word_responses = [x[0] for x in vocab_responses]
 index_to_word_responses.append(unknown_token)
 index_to_word_responses.append(sentence_blank_token)
@@ -120,42 +122,43 @@ for x, response in enumerate(y_train):
         y_train[x] = np.append(y_train[x], [word_to_index_responses[sentence_blank_token]] * dif)
 
 np.random.seed(10)
-
 model = RNNNumpy.RNNNumpy(vocabulary_size)
-losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
+#losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
 
-'''
 load_model_parameters('data/best.npz', model)
 
 while (1):
 
     input = raw_input("Ask Andrew Morgan: ")
 
-    #perform all the formatting on the input
+    #Perform all the formatting on the input
     input = "%s %s %s" % (sentence_start_token, input, sentence_end_token)
     t_input = nltk.word_tokenize(str(input))
-    t_input = [w if w in word_to_index_responses else unknown_token for w in t_input]
+    t_input = [w if w in word_to_index_prompts else unknown_token for w in t_input]
     final_input = np.asarray([word_to_index_prompts[w] for w in t_input])
 
+    #Padding
     dif = max_len - len(final_input)
     if dif > 0:
         final_input = np.append(final_input, [word_to_index_responses[sentence_blank_token]] * dif)
 
-    sentence_probability = model.forward_propagation(final_input)[0]
+    sentence_probability = model.forward_propagation(final_input)[1]
 
     final_formatted_sentence = ""
 
     for word in sentence_probability:
-        index, value = max(enumerate(word), key=operator.itemgetter(1))
-        final_formatted_sentence += index_to_word_responses[index] + " "
+        top_results = heapq.nlargest(3, enumerate(word), key=lambda x: x[1])
+        final_formatted_sentence += index_to_word_responses[top_results[0][0]] + " "
 
-        if index == word_to_index_responses[sentence_end_token]:
+        for result in top_results:
+            print index_to_word_responses[result[0]]
+
+        if top_results[0][0] == word_to_index_responses[sentence_end_token]:
             break
+
     #pdb.set_trace()
 
     print "RESULTS:"
     print final_input
     print final_formatted_sentence
-'''
-
 
