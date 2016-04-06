@@ -78,15 +78,17 @@ print "Found %d unique words tokens in responses." % len(word_freq_responses.ite
 vocab_prompts = word_freq_prompts.most_common(vocabulary_size-1)
 index_to_word_prompts = [x[0] for x in vocab_prompts]
 index_to_word_prompts.append(unknown_token)
+index_to_word_prompts.append(sentence_blank_token)
 word_to_index_prompts = dict([(w,i) for i,w in enumerate(index_to_word_prompts)])
 
 vocab_responses = word_freq_responses.most_common(vocabulary_size-1)
 index_to_word_responses = [x[0] for x in vocab_responses]
 index_to_word_responses.append(unknown_token)
+index_to_word_responses.append(sentence_blank_token)
 word_to_index_responses = dict([(w,i) for i,w in enumerate(index_to_word_responses)])
 
 print "Using vocabulary size %d." % vocabulary_size
-print "The least frequent word in our vocabulary is '%s' and appeared %d times." % (vocab_prompts[-1][0], vocab_prompts[-1][1])
+#print "The least frequent word in our vocabulary is '%s' and appeared %d times." % (vocab_prompts[-1][0], vocab_prompts[-1][1])
 
 # Replace all words not in our vocabulary with the unknown token (Responses)
 for i, sent in enumerate(tokenized_responses):
@@ -96,27 +98,32 @@ for i, sent in enumerate(tokenized_responses):
 for i, sent in enumerate(tokenized_prompts):
     tokenized_prompts[i] = [w if w in word_to_index_prompts else unknown_token for w in sent]
 
-print "\nExample sentence: '%s'" % responses[5]
-print "\nExample sentence after Pre-processing: '%s'" % tokenized_responses[5]
+#print "\nExample sentence: '%s'" % responses[5]
+#print "\nExample sentence after Pre-processing: '%s'" % tokenized_responses[5]
  
 # Create the training data
 X_train = np.asarray([[word_to_index_prompts[w] for w in sent] for sent in tokenized_prompts])
 y_train = np.asarray([[word_to_index_responses[w] for w in sent] for sent in tokenized_responses])
 
-for x, prompt in enumerate(X_train):
-    dif = len(prompt) - len(y_train[x])
-    if dif > 0:
-        #prompts is longer, pad responses
-        y_train[x] = np.append(y_train[x], [1] * dif)
+max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses, key=len)))
 
-    elif dif < 0:
-        #response is longer, pad prompts
-        X_train[x] = np.append(X_train[x], [1] * (dif*-1))
+#Pad everything to max length with Blank tokens
+for x, prompt in enumerate(X_train):
+    dif = max_len - len(prompt)
+    if dif > 0:
+        X_train[x] = np.append(X_train[x], [word_to_index_prompts[sentence_blank_token]] * dif)
+
+for x, response in enumerate(y_train):
+    dif = max_len - len(response)
+    if dif > 0:
+        y_train[x] = np.append(y_train[x], [word_to_index_responses[sentence_blank_token]] * dif)
 
 np.random.seed(10)
-# Train on a small subset of the data to see what happens
+
 model = RNNNumpy.RNNNumpy(vocabulary_size)
-load_model_parameters('data/best.npz', model)
+losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
+
+#load_model_parameters('data/best.npz', model)
 
 while (1):
     input = raw_input("Ask Andrew Morgan: ")
@@ -127,5 +134,4 @@ while (1):
     sentence_probability = model.forward_propagation(final_input)
     pdb.set_trace()
 
-#losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
 
