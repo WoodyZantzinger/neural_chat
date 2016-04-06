@@ -12,8 +12,9 @@ import theano.tensor as T
 from utils import *
 from timeit import default_timer as timer
 import datetime
+import operator
 
-vocabulary_size = 4500
+vocabulary_size = 3000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
@@ -123,15 +124,38 @@ np.random.seed(10)
 model = RNNNumpy.RNNNumpy(vocabulary_size)
 losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
 
-#load_model_parameters('data/best.npz', model)
+'''
+load_model_parameters('data/best.npz', model)
 
 while (1):
+
     input = raw_input("Ask Andrew Morgan: ")
+
+    #perform all the formatting on the input
     input = "%s %s %s" % (sentence_start_token, input, sentence_end_token)
     t_input = nltk.word_tokenize(str(input))
     t_input = [w if w in word_to_index_responses else unknown_token for w in t_input]
     final_input = np.asarray([word_to_index_prompts[w] for w in t_input])
-    sentence_probability = model.forward_propagation(final_input)
-    pdb.set_trace()
+
+    dif = max_len - len(final_input)
+    if dif > 0:
+        final_input = np.append(final_input, [word_to_index_responses[sentence_blank_token]] * dif)
+
+    sentence_probability = model.forward_propagation(final_input)[0]
+
+    final_formatted_sentence = ""
+
+    for word in sentence_probability:
+        index, value = max(enumerate(word), key=operator.itemgetter(1))
+        final_formatted_sentence += index_to_word_responses[index] + " "
+
+        if index == word_to_index_responses[sentence_end_token]:
+            break
+    #pdb.set_trace()
+
+    print "RESULTS:"
+    print final_input
+    print final_formatted_sentence
+'''
 
 
