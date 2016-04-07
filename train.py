@@ -15,12 +15,11 @@ import datetime
 import operator
 import heapq
 
-vocabulary_size = 4000
+vocabulary_size = 2000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
 sentence_blank_token = "BLANK"
-_HIDDEN_DIM = int(os.environ.get('HIDDEN_DIM', '80'))
 
 # Outer SGD Loop
 # - model: The RNN model instance
@@ -59,6 +58,7 @@ channels = ["pm",
             "cbc",
             "teachstone"]
 
+#channels = ["test"]
 print "Reading Slack history"
 slack_data = slack_load.slack_load(channels)
 
@@ -123,9 +123,11 @@ for x, response in enumerate(y_train):
 
 np.random.seed(10)
 model = RNNNumpy.RNNNumpy(vocabulary_size)
-#losses = train_with_sgd(model, X_train, y_train, nepoch=10, evaluate_loss_after=1)
 
+losses = train_with_sgd(model, X_train, y_train, nepoch=100, evaluate_loss_after=1)
+'''
 load_model_parameters('data/best.npz', model)
+
 
 while (1):
 
@@ -142,7 +144,7 @@ while (1):
     if dif > 0:
         final_input = np.append(final_input, [word_to_index_responses[sentence_blank_token]] * dif)
 
-    sentence_probability = model.forward_propagation(final_input)[1]
+    sentence_probability = model.forward_propagation(final_input)[0]
 
     final_formatted_sentence = ""
 
@@ -161,4 +163,4 @@ while (1):
     print "RESULTS:"
     print final_input
     print final_formatted_sentence
-
+'''

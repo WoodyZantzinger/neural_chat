@@ -15,9 +15,9 @@ def slack_load(channels, USER = "U03S8EK4R"):
 
     for channel in channels:
         for filename in os.listdir(DIR + channel):
+            if filename[0] == ".": continue
             with open(DIR + channel + "/" + filename) as data_file:
                 data = json.load(data_file)
-
 
                 for x, message in enumerate(data):
                     #Some messages with Bots do not have a "user" hence the "try"
@@ -42,4 +42,5 @@ def slack_load(channels, USER = "U03S8EK4R"):
                                 response.append(r)
 
     print "found %d" % len(response)
+    
     return [prompt, response]
