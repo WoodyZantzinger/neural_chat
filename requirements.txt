@@ -1,2 +1,4 @@
 Flask>=0.10.1
 nltk>=3.0.5
+six==1.10.0
+tensorflow==0.7.1
