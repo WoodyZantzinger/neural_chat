@@ -15,56 +15,39 @@ import datetime
 import operator
 import heapq
 
-vocabulary_size = 2000
+vocabulary_size = 5000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
 sentence_blank_token = "BLANK"
 
-# Outer SGD Loop
-# - model: The RNN model instance
-# - X_train: The training data set
-# - y_train: The training data labels
-# - learning_rate: Initial learning rate for SGD
-# - nepoch: Number of times to iterate through the complete dataset
-# - evaluate_loss_after: Evaluate the loss after this many epochs
-def train_with_sgd(model, X_train, y_train, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
-    # We keep track of the losses so we can plot them later
-    losses = []
-    num_examples_seen = 0
-    for epoch in range(nepoch):
-        # Optionally evaluate the loss
-        if (epoch % evaluate_loss_after == 0):
-            loss = model.calculate_loss(X_train, y_train)
-            losses.append((num_examples_seen, loss))
-            time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            print "%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss)
-            # Adjust the learning rate if loss increases
-            if (len(losses) > 1 and losses[-1][1] > losses[-2][1]):
-                learning_rate = learning_rate * 0.5
-                print "Setting learning rate to %f" % learning_rate
-            sys.stdout.flush()
-            save_model_parameters("data/rnn-theano-%d-%d-%s.npz" % (model.hidden_dim, model.word_dim, time), model)
-        # For each training example...
-        for i in range(len(y_train)):
-            # One SGD step
-            model.sgd_step(X_train[i], y_train[i], learning_rate)
-            num_examples_seen += 1
+def write_to_file(file, array):
+    with open(file, "w+") as to_write:
+        for x in array:
+            if type(x) is list:
+                for num in x:
+                    to_write.write("%s " % num)
+                to_write.write("\n")
+            else:
+                to_write.write("%s\n" % x.encode("UTF-8"))
 
 
 channels = ["pm",
             "cville",
             "hbon",
             "cbc",
-            "teachstone"]
+            "teachstone",
+            "wyndham",
+            "announcements"
+            ]
 
 #channels = ["test"]
 print "Reading Slack history"
 slack_data = slack_load.slack_load(channels)
 
 # Append SENTENCE_START and SENTENCE_END
-responses = ["%s %s %s" % (sentence_start_token, x[0], sentence_end_token) for x in slack_data[1]]
-prompts = ["%s %s %s" % (sentence_start_token, x[0], sentence_end_token) for x in slack_data[0]]
+responses = ["%s %s %s" % ("", x[0], "") for x in slack_data[1]]
+prompts = ["%s %s %s" % ("", x[0], "") for x in slack_data[0]]
 print "Parsed %d sentences." % (len(responses))
 
 # Tokenize the sentences into words
@@ -110,6 +93,19 @@ y_train = np.asarray([[word_to_index_responses[w] for w in sent] for sent in tok
 
 max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses, key=len)))
 
+write_to_file("n_data/prompt_vocab.txt", index_to_word_prompts)
+write_to_file("n_data/response_vocab.txt", index_to_word_responses)
+
+split = len(X_train) - 800
+
+write_to_file("n_data/input_train.txt", X_train[:split])
+write_to_file("n_data/output_train.txt", y_train[:split])
+
+write_to_file("n_data/input_dev.txt", X_train[split:])
+write_to_file("n_data/output_dev.txt", y_train[split:])
+
+
+'''
 #Pad everything to max length with Blank tokens
 for x, prompt in enumerate(X_train):
     dif = max_len - len(prompt)
@@ -125,7 +121,7 @@ np.random.seed(10)
 model = RNNNumpy.RNNNumpy(vocabulary_size)
 
 losses = train_with_sgd(model, X_train, y_train, nepoch=100, evaluate_loss_after=1)
-'''
+
 load_model_parameters('data/best.npz', model)
 
 
