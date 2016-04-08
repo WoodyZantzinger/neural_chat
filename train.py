@@ -15,7 +15,7 @@ import datetime
 import operator
 import heapq
 
-vocabulary_size = 5000
+vocabulary_size = 20000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
@@ -38,7 +38,9 @@ channels = ["pm",
             "cbc",
             "teachstone",
             "wyndham",
-            "announcements"
+            "announcements",
+            "android",
+            "ios"
             ]
 
 #channels = ["test"]
@@ -96,7 +98,7 @@ max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses,
 write_to_file("n_data/prompt_vocab.txt", index_to_word_prompts)
 write_to_file("n_data/response_vocab.txt", index_to_word_responses)
 
-split = len(X_train) - 800
+split = len(X_train) - 40000
 
 write_to_file("n_data/input_train.txt", X_train[:split])
 write_to_file("n_data/output_train.txt", y_train[:split])

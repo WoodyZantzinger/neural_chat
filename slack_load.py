@@ -21,7 +21,7 @@ def slack_load(channels, USER = "U03S8EK4R"):
 
                 for x, message in enumerate(data):
                     #Some messages with Bots do not have a "user" hence the "try"
-                    if "user" in message and message["type"] == "message" and message["user"] == "U03S8EK4R":
+                    if "user" in message and "text" in message and message["type"] == "message": # and message["user"] == "U03S8EK4R":
                         #This is an Andrew Morgan message, was the message a response to another message?
 
                         prompt_message = data[(x - 1) % len(data)]
@@ -29,7 +29,10 @@ def slack_load(channels, USER = "U03S8EK4R"):
 
                         if prompt_message != message \
                                 and prompt_message["type"] == "message" \
+                                and "text" in prompt_message\
                                 and (float(message["ts"]) - float(prompt_message["ts"])) < 500\
+                                and len(message["text"]) > 0\
+                                and  len(prompt_message["text"]) > 0\
                                 and message["text"].lower()[0] != "<"\
                                 and prompt_message["text"].lower()[0] != "<":
 

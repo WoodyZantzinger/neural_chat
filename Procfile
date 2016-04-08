@@ -1,1 +1,1 @@
-web: python server.py --decode --train_dir outs/ --num_layers=2 --size=256
+web: python server.py --decode --train_dir outs/ --size=400 --num_layers=2 --steps_per_checkpoint=50
