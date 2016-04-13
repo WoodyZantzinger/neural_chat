@@ -98,7 +98,10 @@ max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses,
 write_to_file("n_data/prompt_vocab.txt", index_to_word_prompts)
 write_to_file("n_data/response_vocab.txt", index_to_word_responses)
 
-split = len(X_train) - 40000
+split = int(len(X_train)*.9)
+
+print("Size of train data: %d", len(X_train))
+print("Size of development [test] data: %d", len(X_train) - split)
 
 write_to_file("n_data/input_train.txt", X_train[:split])
 write_to_file("n_data/output_train.txt", y_train[:split])
