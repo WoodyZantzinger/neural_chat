@@ -1,15 +1,12 @@
 __author__ = 'woodyzantzinger'
 
 import os
-import time
 import tensorflow as tf
-import sys
 from flask import Flask, request
 import json
 from tensorflow.models.rnn.translate import data_utils
 from tensorflow.models.rnn.translate import seq2seq_model
 import numpy as np
-import pdb
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
 tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
