@@ -1,21 +1,10 @@
 import nltk
-import datetime
-import sys
-import os
 import slack_load
 import itertools
-import RNNNumpy
-import time
-import pdb
-import theano
-import theano.tensor as T
 from utils import *
-from timeit import default_timer as timer
-import datetime
-import operator
-import heapq
+from random import randint
 
-vocabulary_size = 20000
+vocabulary_size = 30000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
@@ -56,11 +45,23 @@ print "Parsed %d sentences." % (len(responses))
 tokenized_responses = [nltk.word_tokenize(sent) for sent in responses]
 tokenized_prompts = [nltk.word_tokenize(sent) for sent in prompts]
 
+print "Sample call -> responses:"
+for _ in range(20):
+    ran = randint(0,len(responses))
+    print "\t %s \n\t\t %s" % (prompts[ran], responses[ran])
+
 # Count the word frequencies
 word_freq_prompts = nltk.FreqDist(itertools.chain(*tokenized_prompts))
 word_freq_responses = nltk.FreqDist(itertools.chain(*tokenized_responses))
 print "Found %d unique words tokens in prompts." % len(word_freq_prompts.items())
 print "Found %d unique words tokens in responses." % len(word_freq_responses.items())
+
+resp_num = len(word_freq_responses.items())
+
+print "Rare Words include (from %d to %d):" % (resp_num - 500, resp_num)
+for _ in range(20):
+    ran = randint(resp_num - 500,resp_num)
+    print "\t %s : %d (pos: %d)" % (word_freq_responses.items()[ran][0], word_freq_responses.items()[ran][1], ran)
 
 # Get the most common words and build index_to_word and word_to_index vectors
 vocab_prompts = word_freq_prompts.most_common(vocabulary_size-2)
@@ -95,73 +96,16 @@ y_train = np.asarray([[word_to_index_responses[w] for w in sent] for sent in tok
 
 max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses, key=len)))
 
-write_to_file("n_data/prompt_vocab.txt", index_to_word_prompts)
-write_to_file("n_data/response_vocab.txt", index_to_word_responses)
+write_to_file("train/n_data/prompt_vocab.txt", index_to_word_prompts)
+write_to_file("train/n_data/response_vocab.txt", index_to_word_responses)
 
 split = int(len(X_train)*.9)
 
 print("Size of train data: %d", len(X_train))
 print("Size of development [test] data: %d", len(X_train) - split)
 
-write_to_file("n_data/input_train.txt", X_train[:split])
-write_to_file("n_data/output_train.txt", y_train[:split])
+write_to_file("train/n_data/input_train.txt", X_train[:split])
+write_to_file("train/n_data/output_train.txt", y_train[:split])
 
-write_to_file("n_data/input_dev.txt", X_train[split:])
-write_to_file("n_data/output_dev.txt", y_train[split:])
-
-
-'''
-#Pad everything to max length with Blank tokens
-for x, prompt in enumerate(X_train):
-    dif = max_len - len(prompt)
-    if dif > 0:
-        X_train[x] = np.append(X_train[x], [word_to_index_prompts[sentence_blank_token]] * dif)
-
-for x, response in enumerate(y_train):
-    dif = max_len - len(response)
-    if dif > 0:
-        y_train[x] = np.append(y_train[x], [word_to_index_responses[sentence_blank_token]] * dif)
-
-np.random.seed(10)
-model = RNNNumpy.RNNNumpy(vocabulary_size)
-
-losses = train_with_sgd(model, X_train, y_train, nepoch=100, evaluate_loss_after=1)
-
-load_model_parameters('data/best.npz', model)
-
-
-while (1):
-
-    input = raw_input("Ask Andrew Morgan: ")
-
-    #Perform all the formatting on the input
-    input = "%s %s %s" % (sentence_start_token, input, sentence_end_token)
-    t_input = nltk.word_tokenize(str(input))
-    t_input = [w if w in word_to_index_prompts else unknown_token for w in t_input]
-    final_input = np.asarray([word_to_index_prompts[w] for w in t_input])
-
-    #Padding
-    dif = max_len - len(final_input)
-    if dif > 0:
-        final_input = np.append(final_input, [word_to_index_responses[sentence_blank_token]] * dif)
-
-    sentence_probability = model.forward_propagation(final_input)[0]
-
-    final_formatted_sentence = ""
-
-    for word in sentence_probability:
-        top_results = heapq.nlargest(3, enumerate(word), key=lambda x: x[1])
-        final_formatted_sentence += index_to_word_responses[top_results[0][0]] + " "
-
-        for result in top_results:
-            print index_to_word_responses[result[0]]
-
-        if top_results[0][0] == word_to_index_responses[sentence_end_token]:
-            break
-
-    #pdb.set_trace()
-
-    print "RESULTS:"
-    print final_input
-    print final_formatted_sentence
-'''
+write_to_file("train/n_data/input_dev.txt", X_train[split:])
+write_to_file("train/n_data/output_dev.txt", y_train[split:])

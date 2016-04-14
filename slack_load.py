@@ -13,37 +13,62 @@ def slack_load(channels, USER = "U03S8EK4R"):
     response = []
     prompt = []
 
+    rem = {}
+    rem["invalid"] = 0
+    rem["time"] = 0
+    rem["user"] = 0
+    rem["text"] = 0
+
     for channel in channels:
         for filename in os.listdir(DIR + channel):
             if filename[0] == ".": continue
             with open(DIR + channel + "/" + filename) as data_file:
                 data = json.load(data_file)
 
+                carry_prompt = ""
+
                 for x, message in enumerate(data):
-                    #Some messages with Bots do not have a "user" hence the "try"
-                    if "user" in message and "text" in message and message["type"] == "message": # and message["user"] == "U03S8EK4R":
-                        #This is an Andrew Morgan message, was the message a response to another message?
 
-                        prompt_message = data[(x - 1) % len(data)]
-                        #pdb.set_trace()
+                    prev_message = data[(x - 1) % len(data)]
 
-                        if prompt_message != message \
-                                and prompt_message["type"] == "message" \
-                                and "text" in prompt_message\
-                                and (float(message["ts"]) - float(prompt_message["ts"])) < 500\
-                                and len(message["text"]) > 0\
-                                and  len(prompt_message["text"]) > 0\
-                                and message["text"].lower()[0] != "<"\
-                                and prompt_message["text"].lower()[0] != "<":
+                    #Test Validity of msg and response
+                    if not ("user" in message and "text" in message and message["type"] == "message" and len(message["text"]) > 0 and message["text"].lower()[0] != "<")\
+                            or not ("user" in prev_message and "text" in prev_message and prev_message["type"] == "message" and len(prev_message["text"]) > 0 and prev_message["text"].lower()[0] != "<"): # and message["user"] == "U03S8EK4R":
+                        rem["invalid"] += 1
+                        continue
 
-                            #is this message crazy long?
-                            p = nltk.sent_tokenize(prompt_message["text"].lower())
-                            r = nltk.sent_tokenize(message["text"].lower())
-                            if len(p[0]) < 100 and len(r[0]) < 100:
-                                #This is a true prompt and response, store both
-                                prompt.append(p)
-                                response.append(r)
+                    #Are these messages close enough together. Current length is 20 seconds?
+                    if ((float(message["ts"]) - float(prev_message["ts"])) > 20):
+                        rem["time"] += 1
+                        continue
+
+                    #If both messages are sent by the same user, we should take the old prompt and save it to add to the next prompt?
+                    if (message["user"] == prev_message["user"]):
+                        carry_prompt += prev_message["text"]
+                        rem["user"] += 1
+                        continue
+
+                    #Test text of both messages
+                    if (len(message["text"].split()) > 25) or (len((carry_prompt + prev_message["text"]).split()) > 25):
+                        #Wipe any history we made in the last steps...
+                        carry_prompt = ""
+                        rem["text"] += 1
+                        continue
+
+                    #Add to final lists
+                    p = nltk.sent_tokenize((carry_prompt + prev_message["text"]).lower())
+                    r = nltk.sent_tokenize(message["text"].lower())
+                    prompt.append(p)
+                    response.append(r)
+
+                    #Clear backlog
+                    carry_prompt = ""
 
     print "found %d" % len(response)
+    print "Removed:"
+    print "\t Invalid Message: %d" % rem["invalid"]
+    print "\t Messages too far apart: %d" % rem["time"]
+    print "\t Messages by same user: %d" % rem["user"]
+    print "\t Text too long: %d" % rem["text"]
     
     return [prompt, response]
