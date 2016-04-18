@@ -247,7 +247,7 @@ def decode():
 
       #determine the confidence number of our response
       confidence = 0
-      for x, pos in iter(outputs):
+      for x, pos in enumerate(outputs):
           confidence += output_logits[x][0][pos]
 
       # If there is an EOS symbol in outputs, cut them at that point.
