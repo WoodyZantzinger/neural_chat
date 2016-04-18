@@ -29,7 +29,13 @@ channels = ["pm",
             "wyndham",
             "announcements",
             "android",
-            "ios"
+            "ios",
+            "rexel",
+            "dsservices",
+            "foxnews",
+            "triangle",
+            "skillsoft",
+            "webreakthings"
             ]
 
 #channels = ["test"]

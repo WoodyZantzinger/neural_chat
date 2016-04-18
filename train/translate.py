@@ -251,6 +251,7 @@ def decode():
       # Print out French sentence corresponding to outputs.
       print(" ".join([tf.compat.as_str(rev_fr_vocab[output]) for output in outputs]))
       print("> ", end="")
+      pdb.set_trace()
       #sys.stdout.flush()
       sentence = sys.stdin.readline()
 

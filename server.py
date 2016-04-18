@@ -98,7 +98,7 @@ def hello():
 def message():
     print "POST happened"
     #pdb.set_trace()
-    return_str = decode(request.form['text'].split("AMbot ")[1])
+    return_str = decode(request.form['text'].lower().split("ambot ")[1])
     print "Decode finished"
     resp = {"text": return_str}
     return json.dumps(resp)

@@ -44,7 +44,7 @@ def slack_load(channels, USER = "U03S8EK4R"):
 
                     #If both messages are sent by the same user, we should take the old prompt and save it to add to the next prompt?
                     if (message["user"] == prev_message["user"]):
-                        carry_prompt += prev_message["text"]
+                        carry_prompt += prev_message["text"] + " "
                         rem["user"] += 1
                         continue
 
