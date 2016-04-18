@@ -244,14 +244,24 @@ def decode():
                                        target_weights, bucket_id, True)
       # This is a greedy decoder - outputs are just argmaxes of output_logits.
       outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
+
+      #determine the confidence number of our response
+      confidence = 0
+      for x, pos in outputs:
+          confidence += output_logits[x][0][pos]
+
       # If there is an EOS symbol in outputs, cut them at that point.
       sys.stdout.flush()
       if data_utils.EOS_ID in outputs:
         outputs = outputs[:outputs.index(data_utils.EOS_ID)]
+
+      confidence = confidence / len(outputs)
+
       # Print out French sentence corresponding to outputs.
       print(" ".join([tf.compat.as_str(rev_fr_vocab[output]) for output in outputs]))
+      print("(%.2f)" % confidence)
       print("> ", end="")
-      pdb.set_trace()
+      #pdb.set_trace()
       #sys.stdout.flush()
       sentence = sys.stdin.readline()
 
