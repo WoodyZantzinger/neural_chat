@@ -4,7 +4,7 @@ import itertools
 from utils import *
 from random import randint
 
-vocabulary_size = 30000
+vocabulary_size = 40000
 sentence_start_token = "MESSAGE_START"
 unknown_token = "UNKNOWN_TOKEN"
 sentence_end_token = "MESSAGE_END"
@@ -35,7 +35,16 @@ channels = ["pm",
             "foxnews",
             "triangle",
             "skillsoft",
-            "webreakthings"
+            "webreakthings",
+            "gamenight",
+            "wat",
+            "beer30",
+            "ux",
+            "development",
+            "willowtree",
+            "politics",
+            "highwinds",
+            "regal"
             ]
 
 #channels = ["test"]
@@ -105,9 +114,9 @@ max_len = max(len(max(tokenized_prompts, key=len)), len(max(tokenized_responses,
 write_to_file("train/n_data/prompt_vocab.txt", index_to_word_prompts)
 write_to_file("train/n_data/response_vocab.txt", index_to_word_responses)
 
-split = int(len(X_train)*.9)
+split = int(len(X_train)*.75)
 
-print("Size of train data: %d", len(X_train))
+print("Size of train data: %d", split)
 print("Size of development [test] data: %d", len(X_train) - split)
 
 write_to_file("train/n_data/input_train.txt", X_train[:split])

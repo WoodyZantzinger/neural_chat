@@ -7,6 +7,19 @@ import nltk
 
 DIR = os.getcwd() + '/slack/'
 
+def strip_junk(str):
+    if str.find("@") > -1:
+        at_pos = str.find("@")
+        space_pos = str.find(" ", at_pos)
+        if (at_pos == 0) and (space_pos > 0):
+            return str[space_pos+1:]
+        elif (at_pos == 0):
+            #there was a @ but no space so the @ was the only message
+            return ""
+    return str
+
+
+
 def slack_load(channels, USER = "U03S8EK4R"):
 
     #Place to store all the messages found
@@ -18,6 +31,8 @@ def slack_load(channels, USER = "U03S8EK4R"):
     rem["time"] = 0
     rem["user"] = 0
     rem["text"] = 0
+    rem["stripped"] = 0
+    rem["callout"] = 0
 
     for channel in channels:
         for filename in os.listdir(DIR + channel):
@@ -37,7 +52,7 @@ def slack_load(channels, USER = "U03S8EK4R"):
                         rem["invalid"] += 1
                         continue
 
-                    #Are these messages close enough together. Current length is 20 seconds?
+                    #Are these messages close enough together. Current length is 12 seconds?
                     if ((float(message["ts"]) - float(prev_message["ts"])) > 20):
                         rem["time"] += 1
                         continue
@@ -47,6 +62,15 @@ def slack_load(channels, USER = "U03S8EK4R"):
                         carry_prompt += prev_message["text"] + " "
                         rem["user"] += 1
                         continue
+
+                    #Strip out @ messages
+                    if (message["text"].find("@") == 0) or (prev_message["text"].find("@") == 0):
+                        message["text"] = strip_junk(message["text"])
+                        rem["stripped"] += 1
+                        prev_message["text"] = strip_junk(prev_message["text"])
+                        if (prev_message["text"] == "" or message["text"] == ""):
+                            rem["callout"] += 1
+                            continue
 
                     #Test text of both messages
                     if (len(message["text"].split()) > 25) or (len((carry_prompt + prev_message["text"]).split()) > 25):
@@ -70,5 +94,7 @@ def slack_load(channels, USER = "U03S8EK4R"):
     print "\t Messages too far apart: %d" % rem["time"]
     print "\t Messages by same user: %d" % rem["user"]
     print "\t Text too long: %d" % rem["text"]
+    print "\t Messages stripped of @: %d" % rem["stripped"]
+    print "\t Messages removed for being just a callout: %d" % rem["callout"]
     
     return [prompt, response]
