@@ -156,7 +156,7 @@ class Seq2SeqModel(object):
     if not forward_only:
       self.gradient_norms = []
       self.updates = []
-      opt = tf.train.AdadeltaOptimizer()
+      opt = tf.train.AdadeltaOptimizer(self.learning_rate)
       for b in xrange(len(buckets)):
         gradients = tf.gradients(self.losses[b], params, aggregation_method=2)
         clipped_gradients, norm = tf.clip_by_global_norm(gradients,

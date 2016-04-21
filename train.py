@@ -75,7 +75,7 @@ resp_num = len(word_freq_responses.items())
 
 print "Rare Words include (from %d to %d):" % (resp_num - 500, resp_num)
 for _ in range(20):
-    ran = randint(resp_num - 500,resp_num)
+    ran = randint(resp_num - 500,resp_num) - 1
     print "\t %s : %d (pos: %d)" % (word_freq_responses.items()[ran][0], word_freq_responses.items()[ran][1], ran)
 
 # Get the most common words and build index_to_word and word_to_index vectors

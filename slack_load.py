@@ -8,18 +8,25 @@ import nltk
 DIR = os.getcwd() + '/slack/'
 
 def strip_junk(str):
+    final_str = str
+
     if str.find("@") > -1:
         at_pos = str.find("@")
         space_pos = str.find(" ", at_pos)
         if (at_pos == 0) and (space_pos > 0):
-            return str[space_pos+1:]
+            final_str = str[space_pos+1:]
         elif (at_pos == 0):
             #there was a @ but no space so the @ was the only message
-            return ""
-    return str
+            final_str = ""
+
+    if final_str.find(": ") > -1:
+        pos = final_str.find(": ")
+        final_str = final_str[pos+2:]
+    return final_str
 
 
 
+#def slack_load(channels, USER = "U03S8EK4R"):
 def slack_load(channels, USER = "U03S8EK4R"):
 
     #Place to store all the messages found
@@ -34,7 +41,10 @@ def slack_load(channels, USER = "U03S8EK4R"):
     rem["stripped"] = 0
     rem["callout"] = 0
 
+    channels = os.walk(DIR).next()[1]
+
     for channel in channels:
+        if channel[0] == ".": continue
         for filename in os.listdir(DIR + channel):
             if filename[0] == ".": continue
             with open(DIR + channel + "/" + filename) as data_file:
@@ -64,7 +74,7 @@ def slack_load(channels, USER = "U03S8EK4R"):
                         continue
 
                     #Strip out @ messages
-                    if (message["text"].find("@") == 0) or (prev_message["text"].find("@") == 0):
+                    if (message["text"].find("@") + message["text"].find(": ") >= 0) or (prev_message["text"].find("@")or prev_message["text"].find(": ") >= 0):
                         message["text"] = strip_junk(message["text"])
                         rem["stripped"] += 1
                         prev_message["text"] = strip_junk(prev_message["text"])
