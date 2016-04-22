@@ -47,8 +47,8 @@ from tensorflow.models.rnn.translate import data_utils
 from tensorflow.models.rnn.translate import seq2seq_model
 
 
-tf.app.flags.DEFINE_float("learning_rate", 0.4, "Learning rate.")
-tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.98,
+tf.app.flags.DEFINE_float("learning_rate", 0.15, "Learning rate.")
+tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.95,
                           "Learning rate decays by this much.")
 tf.app.flags.DEFINE_float("max_gradient_norm", 5.0,
                           "Clip gradients to this norm.")
