@@ -101,6 +101,8 @@ class Seq2SeqModel(object):
     if use_lstm:
       single_cell = tf.nn.rnn_cell.BasicLSTMCell(size)
     cell = single_cell
+    if not forward_only:
+      cell = tf.nn.rnn_cell.DropoutWrapper(cell, input_keep_prob=.6)
     if num_layers > 1:
       cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers)
 
