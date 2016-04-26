@@ -108,4 +108,4 @@ if __name__ == "__main__":
     model = create_model(sess, True)
     model.batch_size = 1  # We decode one sentence at a time.
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
